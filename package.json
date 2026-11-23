@@ -1,0 +1,42 @@
+{
+  "name": "hyper-live-backend",
+  "version": "1.0.0",
+  "description": "Hyper Live backend: everything that touches coins (gifts now; recharge, VIP and withdrawals later)",
+  "main": "dist/src/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/src/server.js",
+    "typecheck": "tsc --noEmit",
+    "seed:gifts": "tsx scripts/seed-gifts.ts",
+    "grant:coins": "tsx scripts/grant-coins.ts",
+    "room:level": "tsx scripts/set-room-level.ts",
+    "lucky:seed": "tsx scripts/seed-lucky.ts",
+    "salary:seed": "tsx scripts/seed-salary.ts",
+    "frames:seed": "tsx scripts/seed-frames.ts",
+    "vipframes:set": "tsx scripts/set-vip-frames.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "firebase-admin": "^14.5.0",
+    "helmet": "^8.3.0",
+    "nodemailer": "^10.5.0",
+    "pino-http": "^11.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/nodemailer": "^8.0.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

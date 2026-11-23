@@ -1,0 +1,26 @@
+# Start:   docker compose up -d --build
+# Status:  docker compose ps        Logs: docker compose logs -f backend        Stop: docker compose down
+#
+# Before the first start put the Firebase service account key in this folder as  service-account.json
+# (it is mounted into the container, it is NOT copied into the image and it is blocked in .gitignore).
+services:
+  backend:
+    build: .
+    container_name: hyperlive-backend
+    ports:
+      - "8790:8790"
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "8790"
+      # the key path INSIDE the container (this replaces the Windows path from .env)
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/service-account.json
+    volumes:
+      - ./service-account.json:/run/secrets/service-account.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8790/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
