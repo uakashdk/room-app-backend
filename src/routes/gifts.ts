@@ -8,7 +8,7 @@ import { sendGift } from '../services/giftService';
 const router = Router();
 
 const body = z.object({
-  roomId: z.string().min(1).max(40).regex(/^[A-Za-z0-9]+$/),
+  roomId: z.string().min(1).max(40).regex(/^[A-Za-z0-9]+$/).optional(), // none = a gift in a private chat
   giftId: z.string().min(1).max(60).regex(/^[A-Za-z0-9_-]+$/),
   receiverUid: z.string().min(1).max(128).regex(/^[A-Za-z0-9]+$/),
   count: z.number().int().min(1).max(99),

@@ -1,5 +1,5 @@
 // Writes the default host policy and withdrawal rules (only when they do not exist yet):   npm run salary:seed
-// The numbers are PLACEHOLDERS. Change them in the admin panel (Host policy page) with the client's real policy.
+// The default levels are the client's Salary CHART (10,000 coins = 1 USD). Change them in the admin panel (Host policy page, or per agency in Agencies -> Targets).
 import 'dotenv/config';
 import { db } from '../src/config/firebase';
 import { DEFAULT_SALARY_POLICY, DEFAULT_WITHDRAWAL, SALARY_POLICY_DOC, WITHDRAWAL_DOC } from '../src/config/salary';

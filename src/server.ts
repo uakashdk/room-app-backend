@@ -1,5 +1,6 @@
 import { app } from './app';
 import { env } from './config/env';
+import { startArcadeSweep } from './services/arcadeService';
 import { startRoomCleanup } from './services/roomCleanup';
 import { startRoomLevels } from './services/roomLevels';
 import { startSalaryJob } from './services/salaryService';
@@ -11,6 +12,7 @@ const server = app.listen(env.PORT, '0.0.0.0', () => {
   startRoomLevels();
   startSalaryJob();
   startVipExpiry();
+  startArcadeSweep();
 });
 
 const stop = () => {

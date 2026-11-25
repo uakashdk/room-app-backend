@@ -3,7 +3,7 @@ import { db } from '../config/firebase';
 import { AppError } from '../middleware/error-handler';
 import type { AuthedUser } from '../middleware/authenticate';
 
-export type EconomyPatch = { coinsPerUSD?: number; coinsPerINR?: number; giftReceiverPercent?: number };
+export type EconomyPatch = { coinsPerUSD?: number; coinsPerINR?: number; giftReceiverPercent?: number; chatGiftCoinsPercent?: number };
 export type PackageInput = {
   name: string; currency: 'USD' | 'INR'; price: number; coins?: number; bonusCoins: number; enabled: boolean; order: number;
 };

@@ -12,28 +12,32 @@ export const SALARY_STATE_DOC = 'app_settings/salary_state';
 /** One row of the host policy: reach `targetDiamonds` in a week -> the host earns hostSalaryCents and the agency owner agentSalaryCents. */
 export type SalaryLevel = { level: number; targetDiamonds: number; hostSalaryCents: number; agentSalaryCents: number };
 
+/** weekly = the targets restart every Monday (India time); monthly = they restart on the 1st of every month. */
+export type SalaryPeriod = 'weekly' | 'monthly';
+
 export type SalaryPolicy = {
   levels: SalaryLevel[];
-  minActiveDays: number; // the host must have been live on at least this many days of the week (0 = no rule)
-  minLiveMinutes: number; // and at least this many live minutes in the week (0 = no rule)
+  period: SalaryPeriod; // how long one target period is
+  autoCredit: boolean; // true = the salary goes to the host's balance by itself when the period ends (no admin click)
+  minActiveDays: number; // the host must have been live on at least this many days of the period (0 = no rule)
+  minLiveMinutes: number; // and at least this many live minutes in the period (0 = no rule)
 };
 
-// PLACEHOLDER numbers, to be replaced by the client's real policy in the admin panel.
+// The client's "HOST & AGENCY Salary CHART": 10,000 coins = 1 USD. Total = target / 10,000 USD, the host gets 50% of it.
+// (The agency owner does NOT get a second salary: the agency commission is taken from the host's withdrawal, see withdrawalService.)
+// The admin can change every number (Host policy page, or per agency: Agencies -> Targets).
+const CHART_TARGETS = [30_000, 60_000, 100_000, 150_000, 200_000, 300_000, 450_000, 600_000, 800_000, 1_000_000, 1_300_000, 1_500_000, 1_750_000, 2_000_000, 2_400_000, 2_700_000, 3_100_000, 3_500_000, 4_000_000];
 export const DEFAULT_SALARY_POLICY: SalaryPolicy = {
+  period: 'weekly',
+  autoCredit: false,
   minActiveDays: 0,
   minLiveMinutes: 0,
-  levels: [
-    { level: 1, targetDiamonds: 50_000, hostSalaryCents: 1_000, agentSalaryCents: 100 },
-    { level: 2, targetDiamonds: 125_000, hostSalaryCents: 2_500, agentSalaryCents: 250 },
-    { level: 3, targetDiamonds: 250_000, hostSalaryCents: 5_000, agentSalaryCents: 500 },
-    { level: 4, targetDiamonds: 500_000, hostSalaryCents: 10_000, agentSalaryCents: 1_000 },
-    { level: 5, targetDiamonds: 1_000_000, hostSalaryCents: 20_000, agentSalaryCents: 2_000 },
-    { level: 6, targetDiamonds: 1_500_000, hostSalaryCents: 30_000, agentSalaryCents: 3_000 },
-    { level: 7, targetDiamonds: 2_500_000, hostSalaryCents: 50_000, agentSalaryCents: 5_000 },
-    { level: 8, targetDiamonds: 4_000_000, hostSalaryCents: 80_000, agentSalaryCents: 8_000 },
-    { level: 9, targetDiamonds: 6_000_000, hostSalaryCents: 120_000, agentSalaryCents: 12_000 },
-    { level: 10, targetDiamonds: 10_000_000, hostSalaryCents: 200_000, agentSalaryCents: 20_000 },
-  ],
+  levels: CHART_TARGETS.map((targetDiamonds, i) => ({
+    level: i + 1,
+    targetDiamonds,
+    hostSalaryCents: Math.round((targetDiamonds / 10_000) * 100 * 0.5), // 50% of the total, in cents
+    agentSalaryCents: 0,
+  })),
 };
 
 export type WithdrawalSettings = {
@@ -72,8 +76,10 @@ export function normalizePolicy(raw: any): SalaryPolicy {
     .map((l: SalaryLevel, i: number) => ({ ...l, level: i + 1 })); // levels are always 1, 2, 3 ... in order of the target
   return {
     levels: levels.length ? levels : DEFAULT_SALARY_POLICY.levels,
-    minActiveDays: int(raw?.minActiveDays, 0, 0, 7),
-    minLiveMinutes: int(raw?.minLiveMinutes, 0, 0, 10_080),
+    period: raw?.period === 'monthly' ? 'monthly' : 'weekly',
+    autoCredit: raw?.autoCredit === true,
+    minActiveDays: int(raw?.minActiveDays, 0, 0, 31),
+    minLiveMinutes: int(raw?.minLiveMinutes, 0, 0, 44_640),
   };
 }
 
@@ -91,3 +97,12 @@ export function normalizeWithdrawal(raw: any): WithdrawalSettings {
 /** The highest level whose target is reached (null = below level 1). */
 export const levelFor = (diamonds: number, levels: SalaryLevel[]): SalaryLevel | null =>
   [...levels].reverse().find((l) => diamonds >= l.targetDiamonds) ?? null;
+
+/**
+ * The plan that counts for an agency: its own plan (agencies/<id>.plan, set by the Super admin in Agencies -> Targets),
+ * or the default host policy when the agency has none.
+ */
+export function planOf(agency: FirebaseFirestore.DocumentData | undefined, fallback: SalaryPolicy): { plan: SalaryPolicy; custom: boolean } {
+  if (agency?.plan && Array.isArray(agency.plan.levels) && agency.plan.levels.length) return { plan: normalizePolicy(agency.plan), custom: true };
+  return { plan: fallback, custom: false };
+}

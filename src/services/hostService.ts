@@ -65,6 +65,9 @@ export async function getHostStatus(uid: string) {
     agency: agencySnap?.exists ? { id: agencySnap.id, name: String(agencySnap.data()?.name ?? 'Agency'), status: String(agencySnap.data()?.status ?? 'active') } : null,
     application: app ? { agencyId: String(app.agencyId), agencyName: String(app.agencyName ?? 'Agency'), status: String(app.status), reason: app.reason ? String(app.reason) : null, createdAt: ms(app.createdAt) } : null,
     partner: partnerSnap?.exists ? person(partnerSnap.id, partnerSnap.data()) : null,
+    partners: partnerSnap?.exists ? [person(partnerSnap.id, partnerSnap.data())] : [],
+    roomLevel: 1,
+    maxPartners: 1,
     // I am the partner of this host (so I may run their room when they are away)
     partnerOf: hostOf ? { ...person(hostOf.id, hostOf.data()), ...(await roomStateOf(hostOf.id)), isHostActive: isActiveHost(hostOf.data()) } : null,
   };
@@ -163,7 +166,8 @@ export async function decideApplication(actor: AuthedUser, targetUid: string, de
     if (decision === 'approve') {
       if (u.status && u.status !== 'active') throw new AppError(403, 'account-blocked', 'This account cannot become a host.');
       t.update(userRef, {
-        hostStatus: 'approved', agencyId: app.agencyId, agencyRole: u.agencyRole === 'owner' ? 'owner' : 'none', // 'none' like before: the app only checks for 'owner' hostApprovedAt: FieldValue.serverTimestamp(),
+        hostStatus: 'approved', agencyId: app.agencyId, agencyRole: u.agencyRole === 'owner' ? 'owner' : 'none', // 'none' like before: the app only checks for 'owner'
+        hostApprovedAt: FieldValue.serverTimestamp(),
       });
     } else if (u.hostStatus === 'pending') {
       t.update(userRef, { hostStatus: 'rejected' });
@@ -367,7 +371,7 @@ export async function createAgency(actor: AuthedUser, input: { name: string; own
   throw new AppError(500, 'id-failed', 'Could not make a free Agency ID. Please try again.');
 }
 
-export async function updateAgency(actor: AuthedUser, id: string, patch: { name?: string; status?: 'active' | 'suspended'; commissionPercent?: number }): Promise<void> {
+export async function updateAgency(actor: AuthedUser, id: string, patch: { name?: string; status?: 'active' | 'suspended'; commissionPercent?: number; paypalEmail?: string }): Promise<void> {
   const ref = db.doc(`agencies/${id}`);
   await db.runTransaction(async (t) => {
     if (!(await t.get(ref)).exists) throw new AppError(404, 'not-found', 'This agency does not exist.');
@@ -396,6 +400,9 @@ export async function listAgenciesAdmin() {
       return {
         id: d.id, name: String(x.name ?? ''), ownerName: String(x.ownerName ?? ''), ownerUserId: String(x.ownerUserId ?? ''),
         status: String(x.status ?? 'active'), commissionPercent: Number(x.commissionPercent ?? 0), createdAt: ms(x.createdAt), hosts, pending,
+        paypalEmail: x.paypalEmail ? String(x.paypalEmail) : '', ownerEmail: x.ownerEmail ? String(x.ownerEmail) : '', ownerPhone: x.ownerPhone ? String(x.ownerPhone) : '',
+        logo: x.logo ? String(x.logo) : null, hasOwnPlan: !!x.plan, planPeriod: x.plan?.period === 'monthly' ? 'monthly' : x.plan ? 'weekly' : null,
+        commissionPaidCents: Number(x.commissionPaidCents ?? 0),
       };
     }),
   );

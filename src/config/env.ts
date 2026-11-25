@@ -19,6 +19,10 @@ const schema = z.object({
   PAYPAL_MODE: z.enum(['sandbox', 'live']).default('sandbox'),
   PAYPAL_WEBHOOK_ID: z.string().optional(),
   PUBLIC_API_URL: z.string().url().default('https://api.desivox.co.in'), // where PayPal sends the browser back to
+  // PrimeArcade games. The key comes ONLY from this server's .env (never in the app).
+  PRIMEARCADE_API_KEY: z.string().optional(),
+  PRIMEARCADE_BASE_URL: z.string().url().default('https://primearcade.live'),
+  ARCADE_WEBHOOK_SECRET: z.string().min(16).optional(), // a long random text: it is part of the callback URL, so only PrimeArcade can call it
   APP_SCHEME: z.string().regex(/^[a-z][a-z0-9+.-]*$/).default('desivox'), // the app's link scheme (app.json "scheme")
 });
 

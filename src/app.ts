@@ -5,12 +5,12 @@ import helmet from 'helmet';
 import { env } from './config/env';
 import { errorHandler, notFound } from './middleware/error-handler';
 import adminRouter from './routes/admin';
+import arcadeRouter from './routes/arcade';
 import authRouter from './routes/auth';
 import { agencyRouter, hostRouter } from './routes/host';
 import framesRouter from './routes/Frames';
 import giftsRouter from './routes/gifts';
 import paymentsRouter from './routes/payments';
-import salaryRouter from './routes/salary';
 import roomThemesRouter from './routes/roomThemes';
 import vipRouter from './routes/vip';
 import walletRouter from './routes/wallet';
@@ -23,6 +23,7 @@ app.use(helmet());
 app.use(cors({ origin: env.corsOrigins.length ? env.corsOrigins : false })); // the phone app does not need CORS; browsers must be listed
 // the VIP level form carries a small frame picture (about 100 KB), so only that one route accepts a bigger body
 app.use('/admin/vip-levels', express.json({ limit: '400kb' }));
+app.use('/room-themes/custom', express.json({ limit: '400kb' })); // the owner's own room background picture
 app.use(express.json({ limit: '10kb' }));
 app.use(rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: true, legacyHeaders: false })); // a general limit per IP
 
@@ -36,10 +37,10 @@ app.use('/agency', agencyRouter);
 app.use('/gifts', giftsRouter);
 app.use('/wallet', walletRouter);
 app.use('/payments', paymentsRouter);
-app.use('/salary', salaryRouter);
 app.use('/frames', framesRouter);
 app.use('/vip', vipRouter);
 app.use('/room-themes', roomThemesRouter);
+app.use('/arcade', arcadeRouter);
 app.use('/admin', adminRouter);
 
 app.use(notFound);
